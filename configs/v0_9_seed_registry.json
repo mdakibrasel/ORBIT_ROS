@@ -1,0 +1,13 @@
+{
+  "_comment": "Single source of truth for v0.9.0 seed blocks. tests/test_seed_registry.py checks that held-out blocks never overlap each other, dev/calibration seeds, or already-used seeds.",
+  "dev": [0, 1, 2, 3, 4],
+  "calibration": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+  "used": {"v07_v080_test": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109], "v081_confirmatory": [200, 201, 202, 203, 204, 205, 206, 207, 208, 209]},
+  "heldout": {
+    "A_calibration_eval": [300, 301, 302, 303, 304, 305, 306, 307, 308, 309],
+    "B_gemini_pilot": [400, 401],
+    "C3_webots": [500],
+    "D_recovery_safety": [600, 601, 602, 603, 604, 605, 606, 607, 608, 609],
+    "E_generalization": [700, 701, 702, 703, 704, 705, 706, 707, 708, 709]
+  }
+}

@@ -1,0 +1,66 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "NAO: MCP self-test (live Webots, direct on 1235)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/orbit_mcp_server.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Start Webots (NAO house)",
+            "args": [
+                "--selftest",
+                "--robot",
+                "nao",
+                "--sim",
+                "webots",
+                "--keep-alive"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "NAO: benchmark (live Webots)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/nao_benchmark.py",
+            "args": [
+                "--sim",
+                "webots"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "NAO: live Webots chat with Gemini",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/orbit_chat.py",
+            "args": [
+                "--provider",
+                "gemini"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "NAO: live Webots chat with Groq",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/orbit_chat.py",
+            "args": [
+                "--provider",
+                "groq"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Project: unit tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

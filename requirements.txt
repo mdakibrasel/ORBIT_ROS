@@ -1,0 +1,12 @@
+# v0.1-v0.6 benchmark code runs on the Python standard library (Python 3.10+).
+# v0.7+ statistics, run_v07.py / run_v08.py and the test suite need numpy:
+numpy>=1.24
+# Plots: run_v07.py always draws one; analyze_spatial.py / analyze_v08.py skip the plot if matplotlib is missing.
+matplotlib>=3.7
+# v0.7 audit scripts (audit_v07/) only:
+pandas>=2.0
+# Gemini planner only (not needed for any OracleBackend run):
+google-genai>=1.0.0
+# Test suite:
+pytest>=8.0
+# v0.8.1 was verified with Python 3.13, numpy 2.5, pandas 3.0, matplotlib 3.11.

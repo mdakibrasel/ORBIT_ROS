@@ -1,0 +1,40 @@
+{
+  "_comment": "Noisy variant: 10% flipped camera readings (identifier eps = 0.1) and 5% oracle slip.",
+  "arms": [
+    "bay_old",
+    "bay_robust",
+    "none_robust",
+    "probe_old",
+    "probe_robust",
+    "hybrid_old",
+    "hybrid_robust"
+  ],
+  "baseline_arm": "bay_old",
+  "families": [
+    "motion",
+    "goto",
+    "clean_left",
+    "remember_return"
+  ],
+  "yaws": [
+    0,
+    90,
+    180,
+    270
+  ],
+  "seeds": 3,
+  "agent_config": "S5",
+  "slip": 0.05,
+  "obs_noise": 0.1,
+  "eps": null,
+  "stop_confidence": 0.95,
+  "max_task_probes": 3,
+  "probe_len": 3,
+  "min_weight": 0.01,
+  "cost_weight": 0.0,
+  "hybrid_bay_probes": [
+    "look",
+    "turn90"
+  ],
+  "hybrid_bay_budget": 2
+}

@@ -1,0 +1,26 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.testing.unittestEnabled": true,
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    "tests",
+    "-p",
+    "test_*.py"
+  ],
+  "python.envFile": "${workspaceFolder}/.env",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.venv": true
+  },
+  "files.associations": {
+    "*.wbt": "plaintext",
+    ".env.example": "dotenv"
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "python.analysis.extraPaths": [
+    "C:/Program Files/Webots/lib/controller/python",
+    "${env:LOCALAPPDATA}/Programs/Webots/lib/controller/python"
+  ]
+}

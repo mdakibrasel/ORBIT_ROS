@@ -1,0 +1,13 @@
+{
+  "_comment": "Phase C pilot (docs/VALIDATION_GUIDE.md): 20 instances, C1-C5, one seed, events on. Usage: python run_spatial.py --config configs/run_pilot_groq.json --estimate, then without --estimate. Command-line options override these values. No API key belongs in this file; keys stay in .env.",
+  "planner": "groq",
+  "model": "openai/gpt-oss-120b",
+  "suite": "all",
+  "seeds": 1,
+  "limit": 20,
+  "configs": ["C1", "C2", "C3", "C4", "C5"],
+  "temperature": 0.0,
+  "max_llm_calls": 400,
+  "events": true,
+  "out": "results_groq120b_pilot"
+}

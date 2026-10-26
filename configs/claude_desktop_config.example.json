@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "orbit-nao-webots": {
+      "command": "C:\\Users\\YOUR_NAME\\ORBIT_ROS_v0.16.2_RUN\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\Users\\YOUR_NAME\\ORBIT_ROS_v0.16.2_RUN\\orbit_mcp_server.py",
+        "--robot",
+        "nao",
+        "--sim",
+        "webots",
+        "--keep-alive"
+      ]
+    }
+  }
+}

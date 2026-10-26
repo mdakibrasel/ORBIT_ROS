@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+filterwarnings = ["ignore::DeprecationWarning:google.*"]
+markers = ["live: a LIVE test that needs the Webots NAO and/or a real LLM provider (run with -m live). All other tests are pure code checks."]

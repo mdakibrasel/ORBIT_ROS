@@ -1,0 +1,15 @@
+{
+  "_comment": "Ros2Sim arguments for ROS 2 Jazzy + gz sim (Harmonic) + TurtleBot3 burger via ros_gz_bridge. Untested by the author: run `python run_webots_c1.py --sim ros2 --mode probe --ros2-config configs/ros2_jazzy_tb3.json` first. On Jazzy, /cmd_vel is usually geometry_msgs/TwistStamped; set twist_stamped to false if your bridge expects Twist.",
+  "world_name": "default",
+  "robot_name": "burger",
+  "cmd_topic": "/cmd_vel",
+  "joint_topic": "/joint_states",
+  "scan_topic": "/scan",
+  "truth_topic": "/ground_truth",
+  "bumper_topic": "/bumper",
+  "twist_stamped": true,
+  "fov_deg": 90.0,
+  "dt": 0.032,
+  "settle_s": 0.3,
+  "timeout_s": 10.0
+}

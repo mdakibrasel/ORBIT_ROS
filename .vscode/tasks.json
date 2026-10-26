@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Run unit tests", "type": "shell", "command": "${workspaceFolder}/.venv/Scripts/python.exe -m pytest tests", "group": "test", "problemMatcher": [] },
+    { "label": "Start Webots (NAO house)", "type": "shell", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ${workspaceFolder}/run.ps1 -Mode server", "problemMatcher": [] },
+    { "label": "NAO: live Webots benchmark", "type": "shell", "command": "${workspaceFolder}/.venv/Scripts/python.exe ${workspaceFolder}/tools/nao_benchmark.py --sim webots", "problemMatcher": [] }
+  ]
+}

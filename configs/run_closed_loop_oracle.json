@@ -1,0 +1,11 @@
+{
+  "_comment": "SYNTHETIC closed-loop check for v0.13: plan configs re-plan every 4 actions, the simulator safety gate is on, stale frames fail closed. Oracle only; the numbers are harness validation, not model evidence.",
+  "planner": "oracle",
+  "suite": "all",
+  "seeds": 1,
+  "configs": ["S2", "S3", "S5", "C4", "C5"],
+  "horizon": 4,
+  "safety_gate": true,
+  "fail_closed": true,
+  "out": "results_v013_closed_loop_oracle"
+}

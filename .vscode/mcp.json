@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "orbit-nao-webots": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "${workspaceFolder}/orbit_mcp_server.py",
+        "--robot",
+        "nao",
+        "--sim",
+        "webots",
+        "--keep-alive"
+      ]
+    }
+  }
+}

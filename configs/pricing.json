@@ -1,0 +1,17 @@
+{
+  "_comment": "Prices per 1,000,000 tokens, copied by hand from the provider's official pricing page (paid Standard tier). Every entry needs source_url and the date you read it (retrieved). A model without an entry has no price: its cost is reported as unknown and --max-cost refuses to run. Never guess a price; re-check the page before a paid run, because prices change. Optional keys: cached_input, tier_threshold_tokens, input_above_threshold, output_above_threshold, cached_input_above_threshold. Optional valid_until (YYYY-MM-DD): after that date --max-cost refuses to use the entry (v0.14.1).",
+  "currency": "USD",
+  "models": [
+    {
+      "provider": "google-gemini",
+      "model": "gemini-3.8-flash",
+      "input": 0.75,
+      "output": 3.75,
+      "cached_input": 0.075,
+      "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "retrieved": "2026-10-18",
+      "note": "Standard paid tier, text input; output price includes thinking tokens. The page states these prices apply through 2026-12-31 and rise to input 1.50 / output 7.50 / cached 0.15 from 2027-01-01. A free tier exists; usage on it is not billed, so computed costs are what the same usage costs on the paid tier.",
+      "valid_until": "2026-12-31"
+    }
+  ]
+}
