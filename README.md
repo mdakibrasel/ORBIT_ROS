@@ -1,4 +1,4 @@
-# ORBIT ROS v0.16.5: a NAO humanoid that cleans a furnished house, driven by natural language over MCP
+# ORBIT ROS : a NAO humanoid that cleans a furnished house, driven by natural language over MCP
 
 A NAO humanoid in a furnished 10 x 8 m house (`webots/worlds/orbit_house.wbt`, Webots R2025a). You give commands in plain words
 through an AI app (MCP), for example *"go to the kitchen, the washroom and the bedroom and clean"*. Every motion is checked by a safety
