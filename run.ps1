@@ -23,13 +23,17 @@ if ($Mode -eq "test") { & $py -m unittest discover -s tests -t .; exit $LASTEXIT
 
 $sim = if ($Fake) { "fake" } else { "webots" }
 
-# Health check: wait until Webots is actually ready to accept the extern controller (a listener on controller port 1235),
-# instead of a fixed sleep. Returns as soon as the port is open, or $false after the timeout.
-function Wait-WebotsPort([int]$Port = 1235, [int]$TimeoutSec = 30) {
+# Health check: wait until Webots is actually ready to accept the extern controller (something listening on controller port 1235),
+# instead of a fixed sleep. Uses a fast TCP socket probe and returns as soon as the port answers, or $false after the timeout.
+function Test-WebotsPort([int]$Port = 1235) {
+    $c = [System.Net.Sockets.TcpClient]::new()
+    try { $c.Connect("127.0.0.1", $Port); return $true } catch { return $false } finally { $c.Close() }
+}
+function Wait-WebotsPort([int]$Port = 1235, [int]$TimeoutSec = 60) {
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     while ((Get-Date) -lt $deadline) {
-        if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue) { return $true }
-        Start-Sleep -Milliseconds 200
+        if (Test-WebotsPort $Port) { return $true }
+        Start-Sleep -Milliseconds 150
     }
     return $false
 }
@@ -39,12 +43,13 @@ if ($sim -eq "webots") {
     if (-not $already) {
         & (Join-Path $PSScriptRoot "start_webots.ps1")
     } else { Write-Host "Webots is already running: using it." }
-    # Poll the controller port rather than sleeping a fixed time. On a warm machine Webots is ready in well under 8 s; on a
-    # slow first start the 30 s budget still covers it. If it is already running, the port is usually up immediately.
-    if (Wait-WebotsPort 1235 30) {
-        Write-Host "Webots controller port 1235 is listening (ready)."
+    # Poll the controller port rather than sleeping a fixed time. On a warm machine the port answers almost immediately; a cold
+    # Webots start can take ~10-15 s, so the 60 s budget covers a slow first launch. The old fixed 8 s sleep could under-wait
+    # (Webots measured here needed ~13 s), which caused an early connect attempt before the house was ready.
+    if (Wait-WebotsPort 1235 60) {
+        Write-Host "Webots controller port 1235 is ready."
     } else {
-        Write-Host "Webots controller port 1235 did not open within 30 s; continuing anyway (the MCP server will retry)." -ForegroundColor Yellow
+        Write-Host "Webots controller port 1235 did not open within 60 s; continuing anyway (the MCP server will retry)." -ForegroundColor Yellow
     }
 }
 if ($Mode -eq "server") {

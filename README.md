@@ -145,6 +145,29 @@ Duplicate-process prevention: `start_webots.ps1` refuses to open a second Webots
 or if controller port 1235 already has a listener. "Only one extern controller can own the robot" is enforced by Webots itself; the
 docs and `run.ps1` messages steer you to run just one of the three controllers (AI-client server, `-Mode hold`, or benchmark).
 
+### Startup and health check (v0.16.5)
+
+`run.ps1` no longer blocks on a fixed `Start-Sleep -Seconds 8` after launching Webots. It now **polls the controller port 1235 with a
+fast TCP probe** (≈40 ms per probe, every 150 ms, up to 60 s) and continues the instant Webots is ready — not sooner, not later. This
+is faster on a warm machine and, more importantly, correct on a cold start: on this machine a fresh Webots took **~13 s** to open port
+1235, so the old fixed 8 s sleep under-waited and the server tried to connect before the house was ready. `run.ps1` also skips the
+launch entirely when Webots is already running (no duplicate instance).
+
+Reliable readiness check (non-connecting, safe to run while the server/AI client owns the controller — it never takes the controller
+slot):
+
+```powershell
+.\.venv\Scripts\python.exe orbit_mcp_server.py --robot nao --sim webots --health-check
+# [health] READY: Webots controller port 1235 is listening (...)   -> exit code 0
+# [health] NOT READY: nothing is listening on 127.0.0.1:1235 ...    -> exit code 2
+```
+
+Verified live here on 2026-10-26 (Webots R2025a, `.venv` Python 3.14): Webots opened port 1235 in ~13.2 s; the scripted live self-test
+ran 15 MCP commands and ended `SELF-TEST PASSED (245.2 s)`; after the client disconnected, the `--keep-alive` server logged
+`client closed; keeping the Webots controller connected on 127.0.0.1:1235` and port 1235 stayed listening across repeated checks until
+the server was stopped. Startup Python work is small and unchanged in behaviour (the self-test's `subprocess` import is deferred off the
+serve path; `numpy` is still imported lazily only when Webots actually connects).
+
 ### Claude Desktop
 
 1. Run `.\.venv\Scripts\python.exe orbit_mcp_server.py --robot nao --sim webots --print-config` (it prints the block, already

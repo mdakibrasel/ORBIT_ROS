@@ -1,6 +1,19 @@
 # Changelog
 
 ## 0.16.5
+- Startup optimization (VS Code launch): `run.ps1` replaced the fixed `Start-Sleep -Seconds 8` after launching Webots with a fast
+  TCP readiness poll on controller port 1235 (≈40 ms probe, 150 ms interval, 60 s budget). It returns the instant Webots is ready and
+  skips the launch when Webots is already running. This is faster on a warm machine and fixes a cold-start race: a fresh Webots here
+  needed ~13 s to open port 1235, so the old 8 s sleep under-waited and the server connected before the house was ready. Measured live
+  2026-10-26: port 1235 ready in 13.2 s; warm socket probe ≈40 ms (vs ≈380 ms for `Get-NetTCPConnection`).
+- Added `--health-check` to `orbit_mcp_server.py`: a fast, **non-connecting** readiness probe for NAO+Webots (checks the port listener
+  without taking the controller slot). Exit 0 = ready, 2 = not ready. Safe to run while the server/AI client owns the controller.
+- Deferred the `subprocess` import (only the self-test spawns a child) so it is no longer imported on the serve path; `numpy` remains
+  imported lazily only when Webots actually connects. No functional change.
+- Live verification 2026-10-26 (Webots R2025a): the scripted self-test ran 15 MCP commands (argument checks, safety vetoes and the
+  stop-latch all fired as expected) and ended `SELF-TEST PASSED (245.2 s)`; the `--keep-alive` server held the `orbit_nao` controller on
+  port 1235 after the client disconnected (logged "client closed; keeping the Webots controller connected"), confirmed across repeated
+  health checks. Targeted suites `tests/test_mcp_server.py`, `tests/test_humanoid.py`, `tests/test_bridge.py`: **84 passed, 1 skipped**.
 - Persistent NAO–Webots connection (keep-alive fix): `--keep-alive` now reliably holds the single `orbit_nao` extern controller after
   the AI client disconnects or a self-test finishes, instead of the process exiting and dropping the controller. The keep-alive loop
   builds the Webots backend explicitly (it no longer swallows a connection error via `hasattr`), steps the world continuously, exits

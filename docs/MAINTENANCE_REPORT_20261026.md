@@ -91,3 +91,54 @@ Note: `.kiro/steering/orbit-rules.md` states `_work_backup/` is git-ignored, but
   a continuously connected `orbit_nao` controller across an AI-client disconnect.
 - Only one extern controller may own the NAO; running two of {AI-client server, `-Mode hold`, benchmark} at once will fail to connect.
 - Add the backup/archive directories to `.gitignore` as noted above.
+
+---
+
+## Update — 2026-10-26 (cleanup, startup optimization, live verification)
+
+### Cleanup performed (this session)
+Deleted only verified-safe, non-source, untracked artifacts (manifest below). The recovery checkpoint `_work_backup/20261026_002800/`
+and all other `_backups_*` / `_human_workspace` snapshots were **preserved**.
+
+| Deleted | Size | Reason |
+|---|---|---|
+| 8 active-tree `__pycache__/` (root, `examples`, `orbit_ros`, `orbit_ros/metatool`, `orbit_ros/pel`, `tests`, `tools`, `tools/live`) | 3.47 MB | regenerated Python bytecode; git-ignored |
+| `_archive_human_experiment_20261025_124510/` (41 files) | 14.97 MB | obsolete archived experiment; not imported by any active code/test/launch path (verified by search) |
+
+**Storage reclaimed: 18.44 MB.** No source, test, config, or recovery file was deleted. `.gitignore` extended to cover
+`_work_backup/`, `_backups_*/`, `_archive_*/`, `_human_workspace/`, and the stray `bridge_out.log` / `bridge_err.log`
+(verified with `git check-ignore`: backups/caches ignored, all source/tests/docs still tracked).
+
+### Startup optimization (measured)
+- `run.ps1`: fixed `Start-Sleep -Seconds 8` → fast TCP readiness poll on port 1235 (socket probe ≈40 ms warm, vs ≈380 ms for
+  `Get-NetTCPConnection`; 150 ms interval, 60 s budget). Returns the instant Webots is ready; skips launch if Webots already running.
+- `orbit_mcp_server.py`: added `--health-check` (non-connecting port probe; exit 0 ready / 2 not ready) and deferred the `subprocess`
+  import off the serve path. `numpy` stays lazy (only on Webots connect).
+- Measured live 2026-10-26: cold Webots opened port 1235 in **13.2 s** (so the old 8 s sleep under-waited — a correctness fix, not just
+  speed). Warm fast-path probe returns in tens of ms.
+
+### Live Webots–NAO verification (2026-10-26, Webots R2025a, .venv Python 3.14)
+- Started `start_webots.ps1`; port 1235 ready in 13.2 s.
+- Scripted live self-test: 49 tools listed; **15 MCP commands** executed with expected verdicts (ok / rejected / vetoed — argument
+  checks, no-go-zone veto, outside-house reject, stop-latch all fired); ended **`SELF-TEST PASSED (245.2 s)`**.
+- Persistence: ran `orbit_mcp_server.py --robot nao --sim webots --keep-alive`; on client disconnect it logged
+  `client closed; keeping the Webots controller connected on 127.0.0.1:1235`; port 1235 stayed listening across 5 checks over ~15 s;
+  Webots remained up after the keep-alive server was stopped. Controller released cleanly; Webots closed for cleanup afterwards.
+- No controller connect/disconnect cycle observed. No `/api/v1/models` warning appeared in this run; a codebase search confirms no
+  project code sends `/api/v1/models` or probes port 1234 — that warning is an **external** local-LLM client probing the controller
+  port (as the README documents), not a project bug.
+
+### Test results (newly executed this session)
+- Targeted: `pytest -q -m "not live" tests/test_mcp_server.py tests/test_humanoid.py tests/test_bridge.py` → **84 passed, 1 skipped**
+  (before and after the optimization edits — no regressions).
+
+### Recovery checkpoints (this session)
+- Pre-this-session edits: `_work_backup/20261026_002800/` (orbit_mcp_server.py, run.ps1, README.md, .gitignore, .vscode/mcp.json).
+- Pre-optimization edits: `_work_backup/opt_20261026_014219/` (run.ps1, orbit_mcp_server.py, start_webots.ps1, README.md, .vscode/tasks.json).
+- Restore example: `Copy-Item _work_backup/opt_20261026_014219/run.ps1 run.ps1`. Git history also restores any tracked file
+  (`git checkout -- <file>`).
+
+### Unresolved / notes
+- Live `@pytest.mark.live` suite and the full NAO benchmark were not run this session (long real-time runs); the scripted live
+  self-test above is the live evidence.
+- `.kiro/steering/orbit-rules.md` references `_work_backup/` as git-ignored; it is now actually ignored (fixed in `.gitignore`).
