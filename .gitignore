@@ -10,7 +10,7 @@ __pycache__/
 .pytest_cache/
 # local LLM caches/logs that may contain prompts
 llm_cache_local/
-# MCP server audit logs (v0.15)
+# MCP server audit logs
 results_mcp/
 results_nao_benchmark/
 # working backups, archived experiments and isolated workspaces (recovery snapshots; not source — keep out of commits/release zips)
@@ -18,7 +18,7 @@ _work_backup/
 _backups_*/
 _archive_*/
 _human_workspace/
-# stray historical controller logs (retired v0.16.4 bridge)
+# stray historical controller logs
 bridge_out.log
 bridge_err.log
 # large live-run artifacts (hundreds of MB of screenshots/dumps): kept on disk, excluded from the repo

@@ -1,6 +1,7 @@
 """v0.16 NAO humanoid in the furnished house (orbit_ros/house.py, orbit_ros/humanoid.py, HumanoidMcpServer, orbit_mcp_server.py
 --robot nao). Everything here runs without Webots, with the kinematic FakeNao."""
 import json, math, os, subprocess, sys, tempfile, unittest
+from unittest import mock
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from orbit_ros import house
@@ -381,7 +382,9 @@ class TestMcp(unittest.TestCase):
     def test_vscode_config_has_nao(self):
         with open(os.path.join(ROOT, ".vscode", "mcp.json"), encoding="utf-8") as f: servers = json.load(f)["servers"]
         self.assertEqual(set(servers), {"orbit-nao-webots"})
-        self.assertIn("--robot", servers["orbit-nao-webots"]["args"]); self.assertIn("webots", servers["orbit-nao-webots"]["args"])
+        srv = servers["orbit-nao-webots"]
+        self.assertEqual(srv["command"], "powershell.exe")
+        self.assertIn("start_orbit_mcp.ps1", " ".join(srv["args"]))
 
 
 class TestConnectionStatus(unittest.TestCase):
@@ -402,6 +405,21 @@ class TestConnectionStatus(unittest.TestCase):
         cs = s.connection_status()
         self.assertTrue(cs["connected"]); self.assertEqual(cs["backend"], "fake"); self.assertTrue(cs["ready"])
 
+    def test_webots_reconnect_restores_scene_without_replaying_motion(self):
+        s = HumanoidSession(sim="webots", log_dir=False, memory=False)
+        s.start_pose = house.ROOMS["living_room"][0]
+        s.cleaning["mode"] = "vacuum"
+        candidate = mock.Mock(name="reconnected_webots")
+        candidate.name = "webots"
+        with mock.patch("orbit_ros.humanoid.WebotsNao", return_value=candidate), \
+             mock.patch("socket.socket") as socket_cls:
+            socket_cls.return_value.__enter__ = mock.Mock()
+            socket_cls.return_value.connect.return_value = None
+            self.assertTrue(s.reconnect_webots(timeout=1))
+        candidate.start.assert_called_once_with(*s.start_pose)
+        candidate.set_brush_mode.assert_called_once_with("vacuum")
+        self.assertEqual(s.connection_state, "CONNECTED")
+
     def test_webots_url_reported_without_connecting(self):
         # sim=webots but we never call the robot, so no Webots is contacted; the controller endpoint is still reported.
         s = HumanoidSession(sim="webots", log_dir=False)
@@ -410,6 +428,26 @@ class TestConnectionStatus(unittest.TestCase):
         self.assertIn("1235", cs["controller_url"]); self.assertFalse(cs["uses_port_1240"])
         self.assertFalse(cs["connected"])                        # backend not built, so not connected
         self.assertIsNone(s._backend)                            # a status read must never trigger a Webots connection
+
+    def test_webots_owner_change_invalidates_backend_before_next_call(self):
+        s = HumanoidSession(sim="webots", log_dir=False, memory=False)
+        s._backend = mock.Mock(name="stale_webots")
+        s._webots_owner_pid = 101
+        with mock.patch.object(s, "_controller_owner_pid", return_value=202):
+            s._refresh_webots_owner()
+        self.assertIsNone(s._backend)
+        self.assertEqual(s.connection_state, "DISCONNECTED")
+
+    def test_connection_status_invalidates_stale_webots_backend_before_probe(self):
+        s = HumanoidSession(sim="webots", log_dir=False, memory=False)
+        s._backend = mock.Mock(name="stale_webots")
+        s._backend.name = "webots"
+        s._webots_owner_pid = 101
+        with mock.patch.object(s, "_controller_owner_pid", return_value=202):
+            status = s.connection_status()
+        self.assertFalse(status["connected"])
+        self.assertIsNone(status["backend"])
+        self.assertEqual(status["connection_state"], "DISCONNECTED")
 
     def test_advertised_as_a_session_tool_over_mcp(self):
         s = session("living_room", sim="fake")

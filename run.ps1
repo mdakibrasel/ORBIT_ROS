@@ -10,10 +10,11 @@
 #   .\run.ps1 -Mode benchmark         NAO benchmark (CSV in results_nao_benchmark\)
 #   .\run.ps1 -Mode test              unit tests
 param(
-    [ValidateSet("chat", "server", "hold", "selftest", "benchmark", "test")] [string]$Mode = "chat",
+    [ValidateSet("chat", "server", "hold", "selftest", "benchmark", "health", "test")] [string]$Mode = "chat",
     [string]$Provider = "gemini",
     [string]$Model = "",
-    [switch]$Fake
+    [switch]$Fake,
+    [switch]$VerifyRobot
 )
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
@@ -36,6 +37,11 @@ function Wait-WebotsPort([int]$Port = 1235, [int]$TimeoutSec = 60) {
         Start-Sleep -Milliseconds 150
     }
     return $false
+}
+
+if ($Mode -eq "health") {
+    & (Join-Path $PSScriptRoot "tools\health_check.ps1") -VerifyRobot:$VerifyRobot
+    exit $LASTEXITCODE
 }
 
 if ($sim -eq "webots") {

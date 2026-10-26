@@ -1,0 +1,145 @@
+# Exact duplicate evidence cleanup — 2026-10-26
+
+Removed **130** non-canonical files that were verified byte-for-byte identical to a retained canonical evidence file using SHA-256. No Git-tracked file was deleted. The canonical paths were selected by the normalizer and the duplicate index was regenerated afterward.
+
+## Deleted duplicate paths
+
+- `results_live/cleanup_live/walk_through_wall/webots_console.txt`
+- `results_live/m10_20261025/go_kitchen/webots_console.txt`
+- `results_live/m10_20261025/validate_badtool/start.png`
+- `results_live/m10_20261025/validate_badtool/webots_console.txt`
+- `results_live/m10_20261025/walk_through_wall/start.png`
+- `results_live/m10_20261025/walk_through_wall/verdict.json`
+- `results_live/m10_20261025/walk_through_wall/webots_console.txt`
+- `results_live/nao_camera_verify_20261025T134038Z/camera/webots_console.txt`
+- `results_live/p12vp_20261025/viewpoint_nav/02_follow_start.png`
+- `results_live/p12vp_20261025/viewpoint_nav/03_target_kitchen.png`
+- `results_live/p12vp_20261025/viewpoint_nav/end.png`
+- `results_live/p12vp_20261025/viewpoint_nav/start.png`
+- `results_live/p12vp_20261025/viewpoint_nav/webots_console.txt`
+- `results_live/p12vp_20261025b/viewpoint_nav/end.png`
+- `results_live/p12vp_20261025b/viewpoint_nav/webots_console.txt`
+- `results_live/p13_20261025/human_walk/end.png`
+- `results_live/p13_20261025/human_walk/webots_console.txt`
+- `results_live/p14_20261025/blocked_recovery/webots_console.txt`
+- `results_live/p14_20261025/dependent_ref/webots_console.txt`
+- `results_live/p14_20261025/loop_guard/start.png`
+- `results_live/p14_20261025/loop_guard/webots_console.txt`
+- `results_live/p14_20261025/memory_context/webots_console.txt`
+- `results_live/p14_20261025/no_repeat/webots_console.txt`
+- `results_live/p14_20261025/stop_latch/webots_console.txt`
+- `results_live/phase13_20261025/human_walk/01_human_start.png`
+- `results_live/phase13_20261025/human_walk/02_human_end.png`
+- `results_live/phase13_20261025/human_walk/end.png`
+- `results_live/phase13_20261025/human_walk/metrics.json`
+- `results_live/phase13_20261025/human_walk/screenshots.json`
+- `results_live/phase13_20261025/human_walk/start.png`
+- `results_live/phase13_20261025/human_walk/trace.jsonl`
+- `results_live/phase13_20261025/human_walk/true_poses.csv`
+- `results_live/phase13_20261025/human_walk/verdict.json`
+- `results_live/phase13_20261025/human_walk/webots_console.txt`
+- `results_live/phase14_metatool_20261025/blocked_recovery/end.png`
+- `results_live/phase14_metatool_20261025/blocked_recovery/metatool.jsonl`
+- `results_live/phase14_metatool_20261025/blocked_recovery/metrics.json`
+- `results_live/phase14_metatool_20261025/blocked_recovery/plan.json`
+- `results_live/phase14_metatool_20261025/blocked_recovery/screenshots.json`
+- `results_live/phase14_metatool_20261025/blocked_recovery/start.png`
+- `results_live/phase14_metatool_20261025/blocked_recovery/trace.jsonl`
+- `results_live/phase14_metatool_20261025/blocked_recovery/true_poses.csv`
+- `results_live/phase14_metatool_20261025/blocked_recovery/verdict.json`
+- `results_live/phase14_metatool_20261025/blocked_recovery/webots_console.txt`
+- `results_live/phase14_metatool_20261025/dependent_ref/end.png`
+- `results_live/phase14_metatool_20261025/dependent_ref/metrics.json`
+- `results_live/phase14_metatool_20261025/dependent_ref/screenshots.json`
+- `results_live/phase14_metatool_20261025/dependent_ref/start.png`
+- `results_live/phase14_metatool_20261025/dependent_ref/trace.jsonl`
+- `results_live/phase14_metatool_20261025/dependent_ref/true_poses.csv`
+- `results_live/phase14_metatool_20261025/dependent_ref/verdict.json`
+- `results_live/phase14_metatool_20261025/dependent_ref/webots_console.txt`
+- `results_live/phase14_metatool_20261025/loop_guard/end.png`
+- `results_live/phase14_metatool_20261025/loop_guard/metrics.json`
+- `results_live/phase14_metatool_20261025/loop_guard/screenshots.json`
+- `results_live/phase14_metatool_20261025/loop_guard/start.png`
+- `results_live/phase14_metatool_20261025/loop_guard/trace.jsonl`
+- `results_live/phase14_metatool_20261025/loop_guard/true_poses.csv`
+- `results_live/phase14_metatool_20261025/loop_guard/verdict.json`
+- `results_live/phase14_metatool_20261025/loop_guard/webots_console.txt`
+- `results_live/phase14_metatool_20261025/memory_context/end.png`
+- `results_live/phase14_metatool_20261025/memory_context/metatool.jsonl`
+- `results_live/phase14_metatool_20261025/memory_context/metrics.json`
+- `results_live/phase14_metatool_20261025/memory_context/p14_mem.db`
+- `results_live/phase14_metatool_20261025/memory_context/plan.json`
+- `results_live/phase14_metatool_20261025/memory_context/screenshots.json`
+- `results_live/phase14_metatool_20261025/memory_context/start.png`
+- `results_live/phase14_metatool_20261025/memory_context/trace.jsonl`
+- `results_live/phase14_metatool_20261025/memory_context/true_poses.csv`
+- `results_live/phase14_metatool_20261025/memory_context/verdict.json`
+- `results_live/phase14_metatool_20261025/memory_context/webots_console.txt`
+- `results_live/phase14_metatool_20261025/no_repeat/end.png`
+- `results_live/phase14_metatool_20261025/no_repeat/metatool.jsonl`
+- `results_live/phase14_metatool_20261025/no_repeat/metrics.json`
+- `results_live/phase14_metatool_20261025/no_repeat/plan.json`
+- `results_live/phase14_metatool_20261025/no_repeat/screenshots.json`
+- `results_live/phase14_metatool_20261025/no_repeat/start.png`
+- `results_live/phase14_metatool_20261025/no_repeat/trace.jsonl`
+- `results_live/phase14_metatool_20261025/no_repeat/true_poses.csv`
+- `results_live/phase14_metatool_20261025/no_repeat/verdict.json`
+- `results_live/phase14_metatool_20261025/no_repeat/webots_console.txt`
+- `results_live/phase14_metatool_20261025/stop_latch/end.png`
+- `results_live/phase14_metatool_20261025/stop_latch/metrics.json`
+- `results_live/phase14_metatool_20261025/stop_latch/screenshots.json`
+- `results_live/phase14_metatool_20261025/stop_latch/start.png`
+- `results_live/phase14_metatool_20261025/stop_latch/trace.jsonl`
+- `results_live/phase14_metatool_20261025/stop_latch/true_poses.csv`
+- `results_live/phase14_metatool_20261025/stop_latch/verdict.json`
+- `results_live/phase14_metatool_20261025/stop_latch/webots_console.txt`
+- `results_live/phase16_realistic_human_20261025T040930Z/camera/verdict.json`
+- `results_live/phase16_realistic_human_20261025T040930Z/camera/webots_console.txt`
+- `results_live/phase16_realistic_human_20261025T041218Z/camera/verdict.json`
+- `results_live/phase16_realistic_human_20261025T041218Z/camera/webots_console.txt`
+- `results_live/phase16_realistic_human_20261025T041501Z/camera/verdict.json`
+- `results_live/phase16_realistic_human_20261025T041501Z/camera/webots_console.txt`
+- `results_live/phase16_realistic_human_20261025T041933Z/camera/camera_demo.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/camera/camera_human.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/camera/human_model.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/camera/verdict.json`
+- `results_live/phase16_realistic_human_20261025T041933Z/camera/webots_console.txt`
+- `results_live/phase16_realistic_human_20261025T041933Z/human_model/camera_closeup.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/human_model/camera_human.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/human_model/human_model.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/human_model/human_model_closeup.png`
+- `results_live/phase16_realistic_human_20261025T041933Z/logs/trace.jsonl`
+- `results_live/phase16_realistic_human_20261025T041933Z/metadata/screenshots.json`
+- `results_live/phase16_realistic_human_20261025T041933Z/phase16_camera_summary.json`
+- `results_live/phase16_visual_clarity_20261025T034432Z/assets_and_licenses/pedestrian_provenance.txt`
+- `results_live/phase16_visual_clarity_20261025T034432Z/camera/human_model_closeup.png`
+- `results_live/phase16_visual_clarity_20261025T034432Z/camera/webots_console.txt`
+- `results_live/phase16_visual_clarity_20261025T034432Z/human_model/camera_human.png`
+- `results_live/phase16_visual_clarity_20261025T034432Z/human_model/human_model.png`
+- `results_live/phase16_visual_clarity_20261025T034432Z/human_model/human_model_closeup.png`
+- `results_live/phase16_visual_clarity_20261025T034432Z/logs/trace.jsonl`
+- `results_live/phase16_visual_clarity_20261025T034432Z/metadata/screenshots.json`
+- `results_live/phase16_visual_clarity_20261025T034432Z/phase16_camera_summary.json`
+- `results_live/phase16_visual_clarity_20261025T035901Z/assets_and_licenses/pedestrian_provenance.txt`
+- `results_live/phase16_visual_clarity_20261025T035901Z/camera/verdict.json`
+- `results_live/phase16_visual_clarity_20261025T035901Z/camera/webots_console.txt`
+- `results_live/phase16_visual_clarity_20261025T035901Z/human_model/camera_human.png`
+- `results_live/phase16_visual_clarity_20261025T035901Z/human_model/human_model.png`
+- `results_live/phase16_visual_clarity_20261025T035901Z/human_model/human_model_closeup.png`
+- `results_live/phase16_visual_clarity_20261025T035901Z/logs/trace.jsonl`
+- `results_live/phase16_visual_clarity_20261025T035901Z/metadata/screenshots.json`
+- `results_live/phase16_visual_clarity_20261025T035901Z/phase16_camera_summary.json`
+- `results_live/phase16_visual_clarity_20261025T035901Z/test_reports/phase16_code_checks.txt`
+- `results_live/phase16_visual_clarity_20261025T035901Z/test_reports/phase16_full_code_checks.txt`
+- `results_live/phase16_visual_clarity_20261025T035901Z/test_reports/phase16_mcp_selftest.txt`
+- `results_nao_benchmark/phase10_memory_20261024T224840Z/historical_registry.json`
+- `results_nao_benchmark/phase9_live_20261024T170134Z/safety_no_go_ahead__A__r1.trace.json`
+
+## Verification
+
+- Pre-cleanup duplicate groups: 92
+- Pre-cleanup duplicate files: 130
+- Post-cleanup duplicate groups: 0
+- Post-cleanup duplicate files: 0
+- Post-cleanup inventory: 737 discovered and 737 indexed
+- Original evidence files that were retained remain unchanged.

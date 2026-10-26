@@ -2,15 +2,14 @@
   "servers": {
     "orbit-nao-webots": {
       "type": "stdio",
-      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "command": "powershell.exe",
       "cwd": "${workspaceFolder}",
       "args": [
-        "${workspaceFolder}/orbit_mcp_server.py",
-        "--robot",
-        "nao",
-        "--sim",
-        "webots",
-        "--keep-alive"
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/tools/start_orbit_mcp.ps1"
       ]
     }
   }

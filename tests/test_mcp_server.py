@@ -276,6 +276,12 @@ class TestServerProcess(unittest.TestCase):
         self.assertEqual(json.loads(bad.content[0].text)["status"], "vetoed")
 
 class TestClientConfigs(unittest.TestCase):
+    def test_health_check_does_not_import_humanoid(self):
+        code = ("import sys; sys.argv=['orbit_mcp_server.py','--health-check','--robot','nao','--sim','webots']; "
+                "import orbit_mcp_server; orbit_mcp_server.main(); print('humanoid_loaded=' + str('orbit_ros.humanoid' in sys.modules))")
+        p = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=30, cwd=ROOT)
+        self.assertIn("humanoid_loaded=False", p.stdout)
+
     def test_make_session_connects_to_webots_directly_without_bridge_or_1240(self):
         # v0.16.5: NAO + Webots builds a direct in-process HumanoidSession (extern controller on 1235). No bridge, no port 1240.
         import orbit_mcp_server
@@ -323,8 +329,8 @@ class TestClientConfigs(unittest.TestCase):
         self.assertEqual(set(vs["servers"]), {"orbit-nao-webots"})
         srv = vs["servers"]["orbit-nao-webots"]; self.assertEqual(srv["type"], "stdio")
         self.assertEqual(srv["cwd"], "${workspaceFolder}")
-        self.assertIn("${workspaceFolder}/orbit_mcp_server.py", srv["args"])
-        self.assertIn("--keep-alive", srv["args"])      # keep the controller connected across AI-client disconnects
+        self.assertEqual(srv["command"], "powershell.exe")
+        self.assertIn("${workspaceFolder}/tools/start_orbit_mcp.ps1", srv["args"])
         self.assertNotIn("--bridge-only", srv["args"]); self.assertNotIn("--direct", srv["args"])
         cd = json.load(open(os.path.join(ROOT, "configs", "claude_desktop_config.example.json"), encoding="utf-8"))
         self.assertTrue(cd["mcpServers"]["orbit-nao-webots"]["args"][0].endswith("orbit_mcp_server.py"))

@@ -52,6 +52,8 @@ def build_parser():
                     "THIS Python (run it with the .venv Python), then exit")
     ap.add_argument("--health-check", action="store_true", help="NAO + Webots: quick, non-connecting readiness probe. Reports whether the "
                     "controller port 1235 has a listener (Webots up) WITHOUT taking the controller slot; exit 0 = ready, 2 = not ready.")
+    ap.add_argument("--verify-robot", action="store_true", help="with --health-check, take the controller slot briefly and read the NAO pose; "
+                    "use only before starting the MCP server")
     return ap
 
 def print_config(a, argv):
@@ -161,11 +163,15 @@ def _keep_webots_alive(s):
         except KeyboardInterrupt:
             print("[orbit-mcp] keep-alive: Ctrl+C -> releasing the Webots controller.", file=sys.stderr)
             return
-        except RuntimeError as e:                       # WebotsNao.step raises this when sup.step() == -1: Webots closed or reloaded.
-            print(f"[orbit-mcp] keep-alive: Webots ended ({e}); releasing the controller.", file=sys.stderr)
+        except RuntimeError as e:                       # WebotsNao.step raises this when sup.step() == -1 or Webots reloads.
+            print(f"[orbit-mcp] DISCONNECTED: keep-alive lost Webots ({e})", file=sys.stderr)
+            if getattr(s, "reconnect_webots", lambda: False)():
+                nao = s.nao
+                continue
+            print("[orbit-mcp] ERROR: keep-alive could not reattach orbit_nao; stopping.", file=sys.stderr)
             return
-        except Exception as e:                          # Any other transient fault: pause briefly, then keep trying to hold the port.
-            print(f"[orbit-mcp] keep-alive: transient error ({type(e).__name__}: {e}); retrying in 1 s.", file=sys.stderr)
+        except (OSError, ConnectionError) as e:
+            print(f"[orbit-mcp] RECONNECTING: transient Webots socket error ({type(e).__name__}: {e})", file=sys.stderr)
             time.sleep(1.0)
 
 # ---------------------------------------------------------------------------------------------------------------- self-test
@@ -284,11 +290,17 @@ def health_check(a):
     """
     import socket
     if a.robot == "nao" and a.sim == "webots":
-        from orbit_ros import humanoid as _h
-        url = _h.WEBOTS_CONTROLLER_URL
         host, port = "127.0.0.1", 1235
         try:
             with socket.create_connection((host, port), timeout=1.0):
+                url = "tcp://127.0.0.1:1235/orbit_nao"
+                if getattr(a, "verify_robot", False):
+                    from orbit_ros.humanoid import HumanoidSession
+                    session = HumanoidSession(sim="webots", log_dir=False, memory=False, default_scene=a.scene)
+                    pose = session.nao.pose()
+                    print(f"[health] READY: Webots and NAO controller responded at {url}; pose=({pose[0]:.3f}, {pose[1]:.3f}, "
+                          f"{pose[2]:.1f} deg, fallen={bool(pose[3])})")
+                    return 0
                 print(f"[health] READY: Webots controller port {port} is listening ({url}); the MCP server can own the "
                       f"'orbit_nao' extern controller.")
                 return 0
@@ -301,7 +313,18 @@ def health_check(a):
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
-    a = resolve(build_parser().parse_args(argv))
+    a = build_parser().parse_args(argv)
+    # A readiness probe must stay cheap and non-invasive. In particular, do not import the
+    # house/tool registry just to validate the default NAO scene.
+    if a.health_check:
+        if a.robot == "nao":
+            a.sim = a.sim or "webots"
+            a.scene = a.scene or "living_room"
+        else:
+            a.sim = a.sim or "world2d"
+            a.scene = a.scene or "demo"
+        return health_check(a)
+    a = resolve(a)
     if a.print_config: return print_config(a, argv)
     if a.health_check: return health_check(a)
     if a.selftest: return selftest(a, argv)

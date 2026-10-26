@@ -10,6 +10,12 @@ function Find-WebotsExe([string]$ProjectRoot) {
             if ($_ -match '^\s*WEBOTS_HOME\s*=\s*([^#]+?)\s*(#.*)?$') { $homes += $Matches[1].Trim('"') }
         }
     }
+    # The configured location is the normal VS Code path. Return before registry/drive
+    # enumeration, which is comparatively expensive and unnecessary in that case.
+    foreach ($webotsHome in ($homes | Where-Object { $_ } | Select-Object -Unique)) {
+        $candidate = $webotsHome.TrimEnd('\') + "\msys64\mingw64\bin\webots.exe"
+        if (Test-Path $candidate) { return $candidate }
+    }
     if ($env:ProgramFiles) { $homes += (Join-Path $env:ProgramFiles "Webots") }
     $homes += "C:\Program Files\Webots"
     if ($env:LOCALAPPDATA) { $homes += (Join-Path $env:LOCALAPPDATA "Programs\Webots") }

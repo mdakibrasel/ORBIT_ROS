@@ -23,7 +23,7 @@ from the house map (perception "map", not image recognition). `look` returns the
 see it. The FakeNao backend is a kinematic stand-in used by the tests; it says nothing about how the real NAO walks.
 """
 from __future__ import annotations
-import base64, itertools, json, math, os, time
+import base64, itertools, json, math, os, sys, threading, time
 from .pel.registry import Arg, ToolSpec
 from . import house
 
@@ -355,6 +355,12 @@ class HumanoidSession:
     def __init__(self, sim="fake", max_calls: int = 300, log_dir=None, default_scene: str = "living_room", backend=None, memory=None):
         if backend is None and sim not in ("fake", "webots"): raise ValueError("the humanoid runs in --sim fake or --sim webots")
         self.sim, self._backend, self.max_calls, self.default_scene = sim, backend, max_calls, default_scene
+        self.connection_state = "STARTING" if sim == "webots" else "CONNECTED"
+        self.reconnect_interval = max(0.1, float(os.environ.get("ORBIT_WEBOTS_RECONNECT_INTERVAL", "1.0")))
+        self.reconnect_timeout = max(1.0, float(os.environ.get("ORBIT_WEBOTS_RECONNECT_TIMEOUT", "60")))
+        self._webots_watchdog_stop = threading.Event()
+        self._webots_watchdog_thread = None
+        self._webots_owner_pid = None
         self.guard = HumanoidGuard()
         self.room = (house.W, house.H)
         self.scene = None
@@ -378,8 +384,104 @@ class HumanoidSession:
 
     @property
     def nao(self):
-        if self._backend is None: self._backend = FakeNao() if self.sim == "fake" else WebotsNao()
+        if self._backend is None:
+            self._backend = FakeNao() if self.sim == "fake" else WebotsNao()
+            self.connection_state = "CONNECTED"
+            if self.sim == "webots":
+                self._start_webots_watchdog()
         return self._backend
+
+    @staticmethod
+    def _controller_owner_pid():
+        if os.name != "nt":
+            return None
+        import subprocess
+        try:
+            p = subprocess.run(
+                ["powershell.exe", "-NoProfile", "-Command",
+                 "$c=Get-NetTCPConnection -State Listen -LocalPort 1235 -ErrorAction SilentlyContinue | Select-Object -First 1; "
+                 "if($c){$c.OwningProcess}"],
+                capture_output=True, text=True, timeout=2, check=False)
+            value = p.stdout.strip().splitlines()
+            return int(value[-1]) if value else None
+        except (OSError, ValueError, subprocess.SubprocessError):
+            return None
+
+    def _start_webots_watchdog(self):
+        if self._webots_watchdog_thread and self._webots_watchdog_thread.is_alive():
+            return
+        self._webots_owner_pid = self._controller_owner_pid()
+        self._webots_watchdog_stop.clear()
+
+        def watch():
+            while not self._webots_watchdog_stop.wait(0.5):
+                owner = self._controller_owner_pid()
+                if self._webots_owner_pid is None:
+                    self._webots_owner_pid = owner
+                    continue
+                if owner != self._webots_owner_pid:
+                    self._webots_owner_pid = owner
+                    if self._backend is not None:
+                        self._backend = None
+                        self.connection_state = "DISCONNECTED"
+                        print("[orbit-mcp] DISCONNECTED: Webots controller listener changed; backend will reconnect safely",
+                              file=sys.stderr)
+
+        self._webots_watchdog_thread = threading.Thread(target=watch, name="orbit-webots-watchdog", daemon=True)
+        self._webots_watchdog_thread.start()
+
+    def _refresh_webots_owner(self):
+        """Invalidate a backend when Webots has been replaced between calls."""
+        if self.sim != "webots" or self._backend is None:
+            return
+        owner = self._controller_owner_pid()
+        if owner != self._webots_owner_pid:
+            self._webots_owner_pid = owner
+            self._backend = None
+            self.connection_state = "DISCONNECTED"
+            print("[orbit-mcp] DISCONNECTED: Webots controller listener changed; backend will reconnect safely",
+                  file=sys.stderr)
+
+    def reconnect_webots(self, timeout=None):
+        """Replace a dead Webots Supervisor after the world has restarted.
+
+        A failed motion is never replayed. The current scene is restored at its
+        known safe entry pose, then the next MCP call may proceed normally.
+        """
+        if self.sim != "webots":
+            return False
+        import socket
+        timeout = self.reconnect_timeout if timeout is None else max(0.0, float(timeout))
+        deadline = time.monotonic() + timeout
+        self.connection_state = "RECONNECTING"
+        print("[orbit-mcp] RECONNECTING: waiting for Webots controller port 1235", file=sys.stderr)
+        while time.monotonic() <= deadline:
+            probe = socket.socket()
+            try:
+                probe.settimeout(min(1.0, max(0.1, deadline - time.monotonic())))
+                probe.connect(("127.0.0.1", 1235))
+            except OSError:
+                time.sleep(self.reconnect_interval)
+                continue
+            finally:
+                probe.close()
+            try:
+                candidate = WebotsNao()
+                if self.start_pose is not None:
+                    candidate.start(*self.start_pose)
+                    candidate.set_brush_mode(self.cleaning.get("mode", "vacuum"))
+                self._backend = candidate
+                self._start_webots_watchdog()
+                self.connection_state = "CONNECTED"
+                print("[orbit-mcp] CONNECTED: orbit_nao reattached to Webots on 127.0.0.1:1235", file=sys.stderr)
+                return True
+            except (OSError, RuntimeError) as e:
+                print(f"[orbit-mcp] WAITING: Webots accepted the port but orbit_nao is not ready ({type(e).__name__}: {e})",
+                      file=sys.stderr)
+                time.sleep(self.reconnect_interval)
+        self.connection_state = "ERROR"
+        print(f"[orbit-mcp] ERROR: Webots reconnect timed out after {timeout:.1f} s", file=sys.stderr)
+        return False
 
     def _reset(self):
         self.bumps, self.zones, self.stopped, self.last_veto = [], [], False, None
@@ -429,10 +531,23 @@ class HumanoidSession:
         # but a real connection loss must still surface as a clean {status:error} (never an exception) for calls that would proceed.
         conn_err = None
         try:
+            self._refresh_webots_owner()
             self._ensure()
             fallen = self._pose()["fallen"]
         except RuntimeError as e:
-            conn_err, fallen = e, False      # backend unreachable: assume upright for validation; report the loss after safety checks
+            if self.sim == "webots":
+                self.connection_state = "DISCONNECTED"
+                if self.reconnect_webots():
+                    try:
+                        fallen = self._pose()["fallen"]
+                    except RuntimeError as reconnect_error:
+                        conn_err, fallen = reconnect_error, False
+                    else:
+                        conn_err = None
+                else:
+                    conn_err, fallen = e, False
+            else:
+                conn_err, fallen = e, False      # backend unreachable: assume upright for validation; report the loss after safety checks
         errs = validate_humanoid_call(tool, args, self.stopped, fallen)
         if errs: return self._finish(call, {"status": "rejected", "message": "; ".join(errs)})
         if conn_err is not None:
@@ -441,6 +556,9 @@ class HumanoidSession:
         try:
             res = getattr(self, "_t_" + tool)(**args)
         except RuntimeError as e:
+            if self.sim == "webots":
+                self.connection_state = "DISCONNECTED"
+                print(f"[orbit-mcp] DISCONNECTED: {type(e).__name__}: {e}", file=sys.stderr)
             res = {"status": "error", "message": str(e)}
         if HUMANOID_TOOLS[tool].category in ("motion", "macro", "effector"):
             self._dbg["task"] = {"tool": tool, "args": dict(args), "status": res["status"], "message": str(res.get("message", ""))[:200]}
@@ -1346,11 +1464,16 @@ class HumanoidSession:
         from . import humanoid as _h
         info = {"robot": self.robot_name, "simulator": self.sim, "scene": self.scene,
                 "transport": "in-process (direct)", "uses_port_1240": False,
+                "connection_state": self.connection_state,
                 "call_budget": {"used": self.calls["total"], "max": self.max_calls,
                                 "remaining": max(0, self.max_calls - self.calls["total"])}}
         if self.sim == "webots":
             info["controller_url"] = _h.WEBOTS_CONTROLLER_URL     # tcp://127.0.0.1:1235/orbit_nao
             info["controller_port"] = 1235
+            # Do not probe a stale Supervisor after Webots has been replaced. The
+            # controller API can block while its old socket is being torn down.
+            self._refresh_webots_owner()
+            info["connection_state"] = self.connection_state
         backend = self._backend                                   # do NOT touch self.nao: that would force a connection attempt
         if backend is None:
             info.update(connected=False, backend=None,
