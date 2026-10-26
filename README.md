@@ -80,8 +80,7 @@ These commands were run from this folder here (no Webots):
 ## 4. If Webots shows errors
 
 * `.\run.ps1 -Mode server` opens the only project world, `webots/worlds/orbit_house.wbt`. Then start `orbit-nao-webots`; the MCP
-  server itself connects as the single `<extern>` NAO controller over `tcp://127.0.0.1:1235` (no relay process, no port 1240). The
-  retired TurtleBot Webots world/controller are not included.
+  server itself connects as the single `<extern>` NAO controller over `tcp://127.0.0.1:1235` 
 * "'orbit_nao' extern controller: disconnected" means the MCP server process that held the controller exited (the AI client stopped
   it, or Webots restarted). Webots drops an extern controller the instant its Python process ends. Fixes: (a) the VS Code / Claude
   config launches the server with `--keep-alive`, so it holds the controller even when the AI client disconnects; (b) for a controller
@@ -123,7 +122,7 @@ you -> Copilot/Claude -> MCP -> orbit_mcp_server.py -> registry + safety guard -
 Start with section 1. For a live connection check, start Webots with `.\start_webots.ps1`, then run the VS Code launch entry
 **"NAO: MCP self-test (live Webots, direct on 1235)"**; it must end with `SELF-TEST PASSED`.
 
-### Keeping the NAO controller connected (v0.16.5)
+### Keeping the NAO controller connected
 
 Webots gives up an `<extern>` controller the moment the controller's Python process exits, and the house falls back to
 "Waiting for connection". The MCP server **is** that controller, so without care it would connect and disconnect every time the AI
@@ -145,7 +144,7 @@ Duplicate-process prevention: `start_webots.ps1` refuses to open a second Webots
 or if controller port 1235 already has a listener. "Only one extern controller can own the robot" is enforced by Webots itself; the
 docs and `run.ps1` messages steer you to run just one of the three controllers (AI-client server, `-Mode hold`, or benchmark).
 
-### Startup and health check (v0.16.5)
+### Startup and health check 
 
 `run.ps1` no longer blocks on a fixed `Start-Sleep -Seconds 8` after launching Webots. It now **polls the controller port 1235 with a
 fast TCP probe** (≈40 ms per probe, every 150 ms, up to 60 s) and continues the instant Webots is ready — not sooner, not later. This
@@ -185,7 +184,7 @@ time (the MCP server, `.\run.ps1 -Mode hold`, or the standalone Webots benchmark
 
 ---
 
-## 5. NAO humanoid in the house (v0.16)
+## 5. NAO humanoid in the house
 
 You need section 1 done first, and for the AI app part, section 4.
 
